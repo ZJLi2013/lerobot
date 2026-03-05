@@ -84,9 +84,18 @@ def test_dataset_metadata():
     print(f"  输入特征: {list(input_features.keys())}")
     print(f"  输出特征: {list(output_features.keys())}")
 
-    # 检查是否有语言任务描述
+    # 检查是否有语言任务描述（tasks 可能是 dict 或 DataFrame）
     tasks = dataset_metadata.tasks
-    sample_task = list(tasks.values())[0] if tasks else "(无)"
+    try:
+        import pandas as pd
+        if isinstance(tasks, pd.DataFrame):
+            sample_task = tasks.iloc[0]["task"] if not tasks.empty else "(无)"
+        elif isinstance(tasks, dict):
+            sample_task = list(tasks.values())[0] if tasks else "(无)"
+        else:
+            sample_task = str(tasks)
+    except Exception:
+        sample_task = "(无法读取)"
     print(f"  语言任务描述示例: '{sample_task}'")
     print("  数据集元数据加载成功 ✓")
     return dataset_metadata, input_features, output_features
