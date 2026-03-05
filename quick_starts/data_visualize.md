@@ -78,7 +78,7 @@ ssh david@10.161.176.110
 bash ~/github/lerobot/quick_starts/run_viz_docker.sh web 0
 
 # 方法二：手动 docker run（注意 -p 暴露端口）
-docker run --rm --gpus all \
+docker run --rm  -it --gpus all \
   -v ~/github/lerobot:/workspace/lerobot \
   -v ~/hf_cache:/root/.cache/huggingface \
   -v ~/lerobot_viz_output:/workspace/lerobot/outputs/viz \
@@ -100,7 +100,7 @@ docker run --rm --gpus all \
 ```
 ✓ Rerun Web Viewer 已启动
 ✓ 浏览器访问:  http://10.161.176.110:9090
-✓ 桌面 rerun:  rerun rerun+http://10.161.176.110:9876/proxy
+✓ 桌面 rerun:  python -m rerun "rerun+http://10.161.176.110:9876/proxy"
 ```
 
 ### 3.2 本地访问
@@ -111,12 +111,15 @@ docker run --rm --gpus all \
 ```
 
 **SSH 端口转发**（如果服务器有防火墙）：
-```bash
-# 在本地机器上执行 SSH 端口转发（保持终端开着）
+```powershell
+# 在本地 PowerShell 执行端口转发（保持终端开着，-N 表示只转发不执行命令）
 ssh -L 9090:localhost:9090 -L 9876:localhost:9876 david@10.161.176.110 -N
 
-# 然后本地浏览器打开
-http://localhost:9090
+# 方式一：浏览器打开（最简单，无需安装任何工具）
+Start-Process "http://localhost:9090"
+
+# 方式二：rerun 桌面客户端连接（Windows 下用 python -m rerun）
+python -m rerun "rerun+http://localhost:9876/proxy"
 ```
 
 ### 3.3 使用 lerobot-dataset-viz CLI
@@ -192,13 +195,31 @@ scp david@10.161.176.110:~/lerobot_viz_output/lerobot_svla_so101_pickplace_episo
 
 ### 4.3 本地打开
 
-```bash
+```powershell
 # 安装 rerun（仅需一次）
 pip install rerun-sdk
 
-# 打开 .rrd 文件
-rerun lerobot_svla_so101_pickplace_episode_0.rrd
+# Windows 下推荐用 python -m rerun（避免 PATH 问题）
+python -m rerun lerobot_svla_so101_pickplace_episode_0.rrd
 ```
+
+> **Windows 说明**：`pip install rerun-sdk` 后，`rerun.exe` 安装在 Python 的 Scripts 目录，但 Windows Store Python 不会自动将该目录加入 PATH，导致 PowerShell 找不到 `rerun` 命令。  
+> 解决方案有三种：
+>
+> 1. **直接用 `python -m rerun`**（推荐，无需任何配置，立即可用）
+>
+> 2. **把 Scripts 目录加入 PATH**（一次性，之后 `rerun` 可直接使用）：
+>    ```powershell
+>    $s = "C:\Users\$env:USERNAME\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\Scripts"
+>    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";" + $s, "User")
+>    $env:Path += ";$s"   # 当前终端立即生效
+>    rerun lerobot_svla_so101_pickplace_episode_0.rrd
+>    ```
+>
+> 3. **PowerShell 别名**（轻量方案）：
+>    ```powershell
+>    Add-Content $PROFILE "`nfunction rerun { python -m rerun @args }"
+>    ```
 
 ---
 
@@ -258,9 +279,9 @@ lerobot-dataset-viz \
   --grpc-port 9876 \
   --web-port 9090
 
-# 本地连接:
-rerun rerun+http://10.161.176.110:9876/proxy
-# 或浏览器:
+# 本地连接（Windows PowerShell）:
+python -m rerun "rerun+http://10.161.176.110:9876/proxy"
+# 或浏览器（无需安装任何工具）:
 # http://10.161.176.110:9090
 
 # 保存 .rrd（远端执行）:
@@ -281,6 +302,8 @@ lerobot-dataset-viz \
 ---
 
 ## 7. 数据集内容说明
+
+远端目录: ~/hf_cache/lerobot/lerobot/svla_so101_pickplace
 
 `lerobot/svla_so101_pickplace` 是 SO-101 机器人抓取放置任务的真实演示数据集：
 
