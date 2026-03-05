@@ -28,6 +28,7 @@
 | `test_diffusion_pusht.py` | **全部通过 ✓** | 6/6 步 PASS |
 | `test_act_so101.py` | **全部通过 ✓** | 6/6 步 PASS |
 | `test_smolvla_so101.py` | **全部通过 ✓** | 6/6 步 PASS |
+| `viz_dataset_so101.py` | **全部通过 ✓** | stats/save 两种模式均正常 |
 
 ---
 
@@ -122,6 +123,43 @@
 **峰值显存**: 2017 MB（**1.97 GB**）
 
 > SmolVLA 的 Flow Matching Loss 初期波动属正常现象（随机噪声时间步 t 导致 loss 不单调）。训练 5 步的目的仅为验证 pipeline 通路，非验证收敛性。预训练权重加载时 `strict=False`，状态/动作投影层因数据集不同而重新初始化，VLM 骨干权重完整复用。
+
+---
+
+### 3.4 viz_dataset_so101.py — 数据集可视化（Rerun）
+
+**数据集**: `lerobot/svla_so101_pickplace`（11,939 帧，50 episodes，双摄像头）  
+**工具**: Rerun SDK 0.26.2 + Matplotlib  
+**测试模式**: `stats`（纯统计，headless）+ `save`（生成 .rrd 文件）
+
+| 步骤 | 内容 | 结果 |
+|------|------|------|
+| stats 模式 | 生成 action/state 时序曲线图（PNG）+ 相机截帧图 | PASS ✓ |
+| save 模式 | 生成 `lerobot_svla_so101_pickplace_episode_0.rrd`（117 MB）| PASS ✓ |
+
+**Stats 模式输出文件**（保存至 `~/lerobot_viz_output/`）：
+
+| 文件 | 大小 | 内容 |
+|------|------|------|
+| `action_episode_0.png` | 122 KB | 6维动作序列时序曲线（Episode 0，303帧，10.07s）|
+| `state_episode_0.png` | 112 KB | 6维关节状态时序曲线 |
+| `frames_episode_0.png` | 224 KB | 双摄像头截帧（每5秒一帧，up + side）|
+| `lerobot_svla_so101_pickplace_episode_0.rrd` | **117 MB** | Rerun 归档文件，本地 `rerun *.rrd` 打开 |
+
+**Episode 0 数据统计**：
+- 帧数：303 帧 / 时长：10.07 秒 / FPS：30
+- Action 均值 (6D): `[18.76, -58.75, 66.51, 69.60, -48.33, 5.95]`
+- State 均值 (6D):  `[18.74, -57.78, 67.74, 69.70, -48.27, 6.89]`
+
+**Headless 可视化三种方案**（详见 `data_visualize.md`）：
+
+| 方案 | 命令 | 访问方式 |
+|------|------|---------|
+| **Web 浏览器** | `run_viz_docker.sh web 0` | `http://10.161.176.110:9090` 或 SSH 转发后 `localhost:9090` |
+| **保存 .rrd** | `run_viz_docker.sh save 0` | `scp *.rrd` 到本地，`rerun *.rrd` 打开 |
+| **纯统计** | `run_viz_docker.sh stats 0` | 生成 PNG，`scp` 到本地查看 |
+
+> Web 模式需要在 `docker run` 时额外指定 `-p 9090:9090 -p 9876:9876` 暴露端口，已封装在 `run_viz_docker.sh` 中。
 
 ---
 
